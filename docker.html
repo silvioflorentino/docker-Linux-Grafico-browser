@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linux Gráfico no Docker</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.6;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+            color: #222;
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: #111;
+        }
+
+        pre {
+            background: #1e1e1e;
+            color: #f8f8f2;
+            padding: 15px;
+            overflow-x: auto;
+            border-radius: 6px;
+        }
+
+        code {
+            font-family: Consolas, Monaco, monospace;
+        }
+
+        section {
+            background: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <p>Existem várias formas de rodar um Linux com interface gráfica dentro de um container Docker. A maneira mais
+        simples hoje é usar uma imagem que já vem com ambiente gráfico acessível pelo navegador (VNC + noVNC).</p>
+
+    <section>
+        <h2>Pré-requisitos</h2>
+
+        <ul>
+            <li>Docker instalado</li>
+            <li>Pelo menos 4 GB de RAM livres</li>
+            <li>Navegador web</li>
+        </ul>
+
+        <p>Verifique se o Docker está funcionando:</p>
+
+        <pre><code>docker --version
+docker run hello-world</code></pre>
+    </section>
+
+    <section>
+        <h1>Opção 1 (Mais fácil): Ubuntu gráfico acessível pelo navegador</h1>
+
+        <h2>1. Baixe a imagem</h2>
+
+        <pre><code>docker pull dorowu/ubuntu-desktop-lxde-vnc</code></pre>
+
+        <h2>2. Execute o container</h2>
+
+        <pre><code>docker run -d \
+  --name ubuntu-grafico \
+  -p 6080:80 \
+  -p 5900:5900 \
+  dorowu/ubuntu-desktop-lxde-vnc</code></pre>
+
+        <p>Parâmetros:</p>
+
+        <ul>
+            <li><code>6080</code> → acesso pelo navegador</li>
+            <li><code>5900</code> → acesso via cliente VNC</li>
+            <li><code>-d</code> → executa em segundo plano</li>
+        </ul>
+
+        <h2>3. Acesse a interface gráfica</h2>
+
+        <p>Abra no navegador:</p>
+
+        <pre><code>http://localhost:6080</code></pre>
+
+        <p>Você verá uma área de trabalho Ubuntu/LXDE rodando dentro do Docker.</p>
+
+        <h2>4. Entrar no terminal do container</h2>
+
+        <pre><code>docker exec -it ubuntu-grafico bash</code></pre>
+
+        <h2>5. Instalar programas</h2>
+
+        <p>Dentro do container:</p>
+
+        <pre><code>apt update
+apt install -y firefox</code></pre>
+
+        <p>Depois execute:</p>
+
+        <pre><code>firefox</code></pre>
+
+        <p>A janela aparecerá na área gráfica do navegador.</p>
+    </section>
+
+    <section>
+        <h1>Opção 2: Ubuntu gráfico moderno (XFCE)</h1>
+
+        <h2>Baixar</h2>
+
+        <pre><code>docker pull accetto/ubuntu-vnc-xfce</code></pre>
+
+        <h2>Executar</h2>
+
+        <pre><code>docker run -d \
+  --name ubuntu-xfce \
+  -p 6081:6080 \
+  accetto/ubuntu-vnc-xfce</code></pre>
+
+        <p>Acessar:</p>
+
+        <pre><code>http://localhost:6081</code></pre>
+    </section>
+
+    <section>
+        <h1>Opção 3: Linux gráfico usando Docker Compose</h1>
+
+        <p>Crie um arquivo <code>docker-compose.yml</code>:</p>
+
+        <pre><code>services:
+  ubuntu:
+    image: dorowu/ubuntu-desktop-lxde-vnc
+    container_name: ubuntu-grafico
+    ports:
+      - "6080:80"
+      - "5900:5900"</code></pre>
+
+        <p>Suba o ambiente:</p>
+
+        <pre><code>docker compose up -d</code></pre>
+
+        <p>Pare:</p>
+
+        <pre><code>docker compose down</code></pre>
+    </section>
+
+    <section>
+        <h1>Salvar seus arquivos</h1>
+
+        <p>Monte uma pasta do host:</p>
+
+        <pre><code>docker run -d \
+  --name ubuntu-grafico \
+  -p 6080:80 \
+  -v ~/meus-arquivos:/home/ubuntu/shared \
+  dorowu/ubuntu-desktop-lxde-vnc</code></pre>
+
+        <p>Tudo que estiver em:</p>
+
+        <pre><code>~/meus-arquivos</code></pre>
+
+        <p>aparecerá dentro do container.</p>
+    </section>
+
+    <section>
+        <h1>Verificar containers</h1>
+
+        <p>Listar:</p>
+
+        <pre><code>docker ps</code></pre>
+
+        <p>Parar:</p>
+
+        <pre><code>docker stop ubuntu-grafico</code></pre>
+
+        <p>Iniciar novamente:</p>
+
+        <pre><code>docker start ubuntu-grafico</code></pre>
+
+        <p>Remover:</p>
+
+        <pre><code>docker rm -f ubuntu-grafico</code></pre>
+    </section>
+
+    <section>
+        <h1>Exemplo completo</h1>
+
+        <pre><code>docker pull dorowu/ubuntu-desktop-lxde-vnc
+
+docker run -d \
+  --name ubuntu-grafico \
+  -p 6080:80 \
+  -v ~/dados:/home/ubuntu/shared \
+  dorowu/ubuntu-desktop-lxde-vnc</code></pre>
+
+        <p>Depois abra:</p>
+
+        <pre><code>http://localhost:6080</code></pre>
+
+        <p>e você terá um Ubuntu com interface gráfica rodando dentro do Docker.</p>
+    </section>
+
+</body>
+
+</html>
